@@ -27,3 +27,8 @@ class RDD:
     def collect(self):
         # Trigger execution: send tasks to scheduler
         return self.context.scheduler.run(self)
+    
+    def reduceByKey(self, func):
+        """Add a reduceByKey action (lazy)"""
+        self.transforms.append((func, 'reduceByKey'))
+        return self

@@ -1,0 +1,6 @@
+Hello world
+This is a sample file for word count.
+Spark Spark mini PySpark example.
+Hello PySpark world!
+Data parallelism is fun.
+Python multiprocessing simulation.
