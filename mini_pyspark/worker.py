@@ -1,0 +1,16 @@
+class Worker:
+    def __init__(self, worker_id):
+        self.worker_id = worker_id
+        # Could spawn a process/thread here
+
+    def execute(self, partition, transforms):
+        data = partition.data
+        for func, typ in transforms:
+            if typ == 'map':
+                data = [func(x) for x in data]
+            elif typ == 'filter':
+                data = [x for x in data if func(x)]
+        return data
+
+    def stop(self):
+        pass  # Clean up resources
