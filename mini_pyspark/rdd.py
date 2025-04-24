@@ -1,34 +1,39 @@
 from .partition import Partition
 
 class RDD:
-    def __init__(self, context, data, num_partitions=None):
+    def __init__(self, context, data=None, num_partitions=None,
+                 prev=None, transform=None, ttype=None):
         self.context = context
-        self.num_partitions = num_partitions or context.scheduler.num_workers
-        self.partitions = self._create_partitions(data)
-        self.transforms = []  # store (func, type) for lazy evaluation
+        # Root RDD holds actual data
+        if prev is None:
+            self.num_partitions = num_partitions or context.num_workers
+            self.partitions = self._create_partitions(data)
+        else:
+            # Non-root: partitions filled by scheduler after shuffle stage
+            self.num_partitions = None
+            self.partitions = None
+        # Lineage pointers
+        self.prev = prev
+        self.transform = transform  # function or param
+        self.ttype = ttype          # 'map','filter','flatMap','sample','reduceByKey'
 
     def _create_partitions(self, data):
-        slice_size = len(data) // self.num_partitions
-        parts = []
-        for i in range(self.num_partitions):
-            start = i * slice_size
-            end = None if i == self.num_partitions - 1 else (i+1) * slice_size
-            parts.append(Partition(i, data[start:end]))
-        return parts
+        slice_size = max(len(data) // self.num_partitions, 1)
+        return [Partition(i, data[i*slice_size : None if i+1==self.num_partitions else (i+1)*slice_size])
+                for i in range(self.num_partitions)]
 
-    def map(self, func):
-        self.transforms.append((func, 'map'))
-        return self
+    def _new(self, transform, ttype):
+        # Create a new RDD node in the lineage
+        return RDD(self.context, prev=self, transform=transform, ttype=ttype)
 
-    def filter(self, func):
-        self.transforms.append((func, 'filter'))
-        return self
+    def map(self, func):      return self._new(func, 'map')
+    def filter(self, func):   return self._new(func, 'filter')
+    def flatMap(self, func):  return self._new(func, 'flatMap')
+    def sample(self, frac):   return self._new(frac, 'sample')
+    def reduceByKey(self, func): return self._new(func, 'reduceByKey')
 
     def collect(self):
-        # Trigger execution: send tasks to scheduler
         return self.context.scheduler.run(self)
-    
-    def reduceByKey(self, func):
-        """Add a reduceByKey action (lazy)"""
-        self.transforms.append((func, 'reduceByKey'))
-        return self
+
+    def count(self):
+        return len(self.collect())

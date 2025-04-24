@@ -1,3 +1,4 @@
+import random
 class Worker:
     def __init__(self, worker_id):
         self.worker_id = worker_id
@@ -28,4 +29,13 @@ def worker_loop(task_queue, result_queue, worker_id):
                 data = [func(x) for x in data]
             elif typ == 'filter':
                 data = [x for x in data if func(x)]
+            elif typ == 'flatMap':
+                new_data = []
+                for x in data:
+                    new_data.extend(func(x))
+                data = new_data
+            elif typ == 'sample':
+                frac = func
+                data = [x for x in data if random.random() < frac]
+        # 'reduceByKey' is handled by scheduler
         result_queue.put(data)

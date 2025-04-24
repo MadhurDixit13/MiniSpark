@@ -1,6 +1,8 @@
 import pickle
 from .rdd import RDD
 from .scheduler import TaskScheduler
+from .planner import create_stages
+from .viz import visualize
 
 class MiniSparkContext:
     """
@@ -15,6 +17,16 @@ class MiniSparkContext:
         Split data into partitions and wrap into an RDD.
         """
         return RDD(self, data, num_partitions)
+
+    def plan(self, rdd):
+        """
+        Build execution stages from RDD lineage.
+        """
+        return create_stages(rdd)
+    
+    def visualize(self, rdd):
+        """Draw the DAG of RDD transformations"""
+        visualize(rdd)
 
     def shutdown(self):
         """
