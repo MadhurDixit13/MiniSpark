@@ -1,4 +1,4 @@
-import random
+import random, os, time
 class Worker:
     def __init__(self, worker_id):
         self.worker_id = worker_id
@@ -18,12 +18,18 @@ class Worker:
 """
     Worker process loop: pulls tasks from queue, applies transforms, pushes results.
 """
-def worker_loop(task_queue, result_queue, worker_id):
+def worker_loop(task_queue, result_queue, worker_id, fail_prob=0.1):
+    # seed RNG differently per worker
+    random.seed(time.time() + worker_id)
     while True:
         task = task_queue.get()
         if task is None:
             break
         data, transforms = task
+        # 🔥 Simulate failure
+        if random.random() < fail_prob:
+            # worker “dies” ungracefully
+            os._exit(1)
         for func, typ in transforms:
             if typ == 'map':
                 data = [func(x) for x in data]

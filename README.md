@@ -6,19 +6,22 @@ MiniSpark is a minimal, educational re-implementation of Apache Spark in pure Py
 
 - **Core RDD API**  
   - `map`, `filter`, `flatMap`, `sample`  
-  - `reduceByKey`, `count`, `collect`, `take`, etc.  
-- **Lazy Evaluation & Stages**  
-  - Builds a lineage DAG  
+  - `reduceByKey`, `join`, `count`, `collect`, `take`, etc.  
+- **Lazy Evaluation & Stage Planning**  
+  - Builds a lineage DAG of transformations  
   - Splits at shuffle boundaries into narrow vs. wide stages  
 - **Multiprocessing Scheduler**  
   - Driver dispatches tasks to worker processes  
-  - Centralized shuffle & reduce  
-  - Graceful shutdown with fault-tolerance hooks  
+  - Timeout-based retry on worker failure with respawn (fault-tolerance)  
+  - Graceful shutdown  
+- **Persistence & Caching**  
+  - `rdd.cache()` to memoize results and skip re-computation on repeated actions  
 - **DAG Visualization** (optional)  
   - Uses `networkx` + Graphviz (or spring-layout fallback)  
   - Annotates narrow vs. wide transformations  
 - **Examples**  
-  - Word count, sampling, letter count, and DAG viz  
+  - Word count, sampling, letter count  
+  - DAG visualization demo  
 
 ## 📦 Installation
 
@@ -51,9 +54,9 @@ MiniSpark is a minimal, educational re-implementation of Apache Spark in pure Py
 minispark/
 ├── mini_pyspark/
 │   ├── context.py      # SparkContext, visualize(), plan()
-│   ├── rdd.py          # RDD class with lazy transforms
-│   ├── scheduler.py    # TaskScheduler with stage execution
-│   ├── worker.py       # Worker loop for map/filter tasks
+│   ├── rdd.py          # RDD class with lazy transforms + cache
+│   ├── scheduler.py    # TaskScheduler with stage execution and with fault-tolerance
+│   ├── worker.py       # Worker loop for map/filter tasks with failure simulation
 │   ├── planner.py      # Lineage walker & stage splitter
 │   └── viz.py          # NetworkX/Graphviz DAG drawing
 ├── examples/
